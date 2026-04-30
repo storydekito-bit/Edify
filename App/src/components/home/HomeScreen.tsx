@@ -1,5 +1,5 @@
-import { BadgeHelp, Bot, BrainCircuit, Cpu, Crown, FolderOpen, ImagePlus, Import, LayoutTemplate, LifeBuoy, Mic2, Minus, Music2, Plus, Rocket, ShieldCheck, ShoppingBag, Sparkles, UserRound, Video, Wand2, X } from 'lucide-react';
-import { memo, useState } from 'react';
+import { AudioLines, BadgeHelp, Bot, BrainCircuit, Cpu, Crown, FolderOpen, ImagePlus, Import, LayoutTemplate, LifeBuoy, Mic2, Minus, Music2, Plus, Rocket, ShieldCheck, ShoppingBag, Sparkles, UserRound, Video, Wand2, X } from 'lucide-react';
+import { memo, useRef, useState } from 'react';
 import { edifyApi } from '../../lib/bridge';
 import { hasAnyPremium, loadPremiumAccess } from '../../lib/premium';
 import type { BootstrapInfo, PanelId, ProjectSummary } from '../../types/edify';
@@ -16,6 +16,7 @@ type HomeScreenProps = {
   onImportMedia: () => void;
   onOpenPremium: () => void;
   onOpenThumbnailStudio: () => void;
+  onOpenAudioEditor: () => void;
   onOpenEdifyStudio: () => void;
   onOpenAccount: () => void;
   onOpenPanel: (panel: PanelId) => void;
@@ -52,12 +53,14 @@ export const HomeScreen = memo(function HomeScreen({
   onImportMedia,
   onOpenPremium,
   onOpenThumbnailStudio,
+  onOpenAudioEditor,
   onOpenEdifyStudio,
   onOpenAccount,
   onOpenPanel,
   onDropFiles
 }: HomeScreenProps) {
   const [recentMenu, setRecentMenu] = useState<{ x: number; y: number; project: ProjectSummary } | null>(null);
+  const scrollRef = useRef<HTMLElement | null>(null);
   const premiumAccess = loadPremiumAccess();
   const hasPremium = hasAnyPremium(premiumAccess);
   const localProjects = recentProjects.filter((project) => project.source !== 'cloud');
@@ -65,8 +68,19 @@ export const HomeScreen = memo(function HomeScreen({
 
   return (
     <main
+      ref={scrollRef}
       className="home-screen"
       onClick={() => setRecentMenu(null)}
+      onWheelCapture={(event) => {
+        const current = scrollRef.current;
+        if (!current) return;
+        if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+        const nextTop = current.scrollTop + event.deltaY;
+        const canScroll = nextTop >= 0 && nextTop <= current.scrollHeight - current.clientHeight;
+        if (!canScroll) return;
+        event.preventDefault();
+        current.scrollTop = nextTop;
+      }}
       onDragOver={(event) => event.preventDefault()}
       onDrop={(event) => {
         event.preventDefault();
@@ -106,6 +120,12 @@ export const HomeScreen = memo(function HomeScreen({
             <span>Thumbnail Studio</span>
             <small>PNG covers and promo cards</small>
           </button>
+          <button className="home-utility-pill subtle home-utility-pill-new" onClick={onOpenAudioEditor}>
+            <AudioLines size={15} />
+            <span>Audio Editor</span>
+            <small>New mixing, voice cleanup, and export</small>
+            <em>NEW</em>
+          </button>
           <button className="home-utility-pill subtle" onClick={() => void edifyApi.openExternalUrl('https://discord.gg/edify')}>
             <BadgeHelp size={15} />
             <span>Join Discord</span>
@@ -139,6 +159,14 @@ export const HomeScreen = memo(function HomeScreen({
             </button>
           );
         })}
+        <button className="home-dashboard-card home-dashboard-card-new" onClick={onOpenAudioEditor}>
+          <AudioLines size={18} />
+          <span>
+            <strong>Audio Editor</strong>
+            <small>New waveform, cleanup, record, and mix tools</small>
+          </span>
+          <em>NEW</em>
+        </button>
       </section>
 
       <section className="home-studio-strip">
@@ -202,6 +230,11 @@ export const HomeScreen = memo(function HomeScreen({
           <button className="home-action" onClick={onOpenThumbnailStudio}>
             <ImagePlus size={22} />
             <span>Thumbnail Studio</span>
+          </button>
+          <button className="home-action home-action-new" onClick={onOpenAudioEditor}>
+            <AudioLines size={22} />
+            <span>Audio Editor</span>
+            <small>NEW</small>
           </button>
           <button className="home-action" onClick={onOpenEdifyStudio}>
             <LayoutTemplate size={22} />

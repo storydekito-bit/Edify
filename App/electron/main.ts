@@ -84,6 +84,7 @@ type AppwriteAccountRecord = {
 type StoreShape = {
   recentProjects: ProjectSummary[];
   studioRecentProjects: ProjectSummary[];
+  audioRecentProjects: ProjectSummary[];
   settings: AppSettings;
   authSession: DesktopAuthSession | null;
   consentAcceptedAt: string | null;
@@ -94,6 +95,7 @@ type StoreShape = {
 const defaultStore: StoreShape = {
   recentProjects: [],
   studioRecentProjects: [],
+  audioRecentProjects: [],
   settings: {
     uiScale: 1,
     previewQuality: 'Half',
@@ -114,6 +116,7 @@ let thumbnailAdvancedWindow: BrowserWindow | null = null;
 let thumbnailAdvancedProject: any | null = null;
 let edifyStudioWindow: BrowserWindow | null = null;
 let edifyStudioSeedProject: any | null = null;
+let audioEditorWindow: BrowserWindow | null = null;
 const exportJobs = new Map<string, { cancel: () => void }>();
 let allowWindowClose = false;
 let updatePromptVisible = false;
@@ -168,6 +171,10 @@ function getStudioProjectsDir() {
   return path.join(app.getPath('documents'), 'Thumbnail Studio Projects');
 }
 
+function getAudioProjectsDir() {
+  return path.join(app.getPath('documents'), 'Audio Editor Projects');
+}
+
 function getCacheDir() {
   return path.join(app.getPath('userData'), 'Cache');
 }
@@ -195,6 +202,7 @@ async function loadStore() {
     storeData = {
       recentProjects: parsed.recentProjects ?? defaultStore.recentProjects,
       studioRecentProjects: parsed.studioRecentProjects ?? defaultStore.studioRecentProjects,
+      audioRecentProjects: parsed.audioRecentProjects ?? defaultStore.audioRecentProjects,
       settings: {
         ...defaultStore.settings,
         ...(parsed.settings ?? {})
@@ -678,6 +686,7 @@ async function signOutDesktopAccount() {
 async function ensureAppDirs() {
   await fs.mkdir(getProjectsDir(), { recursive: true });
   await fs.mkdir(getStudioProjectsDir(), { recursive: true });
+  await fs.mkdir(getAudioProjectsDir(), { recursive: true });
   await fs.mkdir(getCacheDir(), { recursive: true });
   await fs.mkdir(path.join(app.getPath('userData'), 'Recordings'), { recursive: true });
   await loadStore();
@@ -703,6 +712,16 @@ async function addRecentStudioProject(summary: ProjectSummary) {
   await persistStore();
 }
 
+async function addRecentAudioProject(summary: ProjectSummary) {
+  const current = storeData.audioRecentProjects;
+  const next = [
+    summary,
+    ...current.filter((item) => item.path !== summary.path)
+  ].slice(0, 24);
+  storeData.audioRecentProjects = next;
+  await persistStore();
+}
+
 function projectSaveDefaultPath(document: any) {
   const safeName = String(document?.name ?? 'Untitled Edit').replace(/[<>:"/\\|?*]+/g, '-').trim() || 'Untitled Edit';
   return path.join(getProjectsDir(), `${safeName}.edify`);
@@ -711,6 +730,11 @@ function projectSaveDefaultPath(document: any) {
 function studioProjectSaveDefaultPath(document: any) {
   const safeName = String(document?.name ?? 'Untitled Studio').replace(/[<>:"/\\|?*]+/g, '-').trim() || 'Untitled Studio';
   return path.join(getStudioProjectsDir(), `${safeName}.edifystudio`);
+}
+
+function audioProjectSaveDefaultPath(document: any) {
+  const safeName = String(document?.name ?? 'Untitled Audio Project').replace(/[<>:"/\\|?*]+/g, '-').trim() || 'Untitled Audio Project';
+  return path.join(getAudioProjectsDir(), `${safeName}.edifyaudio`);
 }
 
 async function saveProjectDocument(document: any, filePath?: string, forceDialog = false) {
@@ -763,6 +787,34 @@ async function saveStudioProjectDocument(document: any, filePath?: string, force
   };
   await writeJsonFile(targetPath, nextDocument);
   await addRecentStudioProject(projectSummaryFromDocument(targetPath, nextDocument));
+  return { canceled: false, filePath: targetPath, document: nextDocument };
+}
+
+async function saveAudioProjectDocument(document: any, filePath?: string, forceDialog = false) {
+  const targetPath =
+    !forceDialog && filePath
+      ? filePath
+      : dialog.showSaveDialogSync(audioEditorWindow ?? mainWindow!, {
+          title: forceDialog ? 'Save Audio Editor Project As' : 'Save Audio Editor Project',
+          defaultPath: audioProjectSaveDefaultPath(document),
+          filters: [
+            { name: 'Audio Editor Project', extensions: ['edifyaudio'] },
+            { name: 'JSON', extensions: ['json'] }
+          ]
+        });
+
+  if (!targetPath) {
+    return { canceled: true };
+  }
+
+  const nextDocument = {
+    ...document,
+    kind: 'audio-editor',
+    path: targetPath,
+    updatedAt: new Date().toISOString()
+  };
+  await writeJsonFile(targetPath, nextDocument);
+  await addRecentAudioProject(projectSummaryFromDocument(targetPath, nextDocument));
   return { canceled: false, filePath: targetPath, document: nextDocument };
 }
 
@@ -980,6 +1032,49 @@ async function openEdifyStudioWindow() {
   return edifyStudioWindow;
 }
 
+async function openAudioEditorWindow() {
+  if (audioEditorWindow && !audioEditorWindow.isDestroyed()) {
+    audioEditorWindow.focus();
+    return audioEditorWindow;
+  }
+
+  audioEditorWindow = new BrowserWindow({
+    width: 1760,
+    height: 1100,
+    minWidth: 1340,
+    minHeight: 840,
+    backgroundColor: '#081019',
+    icon: getWindowIconPath(),
+    title: 'Audio Editor',
+    parent: mainWindow ?? undefined,
+    show: false,
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      webSecurity: false
+    }
+  });
+
+  audioEditorWindow.once('ready-to-show', () => {
+    audioEditorWindow?.show();
+  });
+
+  audioEditorWindow.on('closed', () => {
+    audioEditorWindow = null;
+  });
+
+  const query = '?window=audio-editor';
+  if (isDev && process.env.VITE_DEV_SERVER_URL) {
+    await audioEditorWindow.loadURL(`${process.env.VITE_DEV_SERVER_URL}${query}`);
+  } else {
+    await audioEditorWindow.loadFile(path.join(__dirname, '../dist/index.html'), { query: { window: 'audio-editor' } });
+  }
+
+  return audioEditorWindow;
+}
+
 function setupAutoUpdater() {
   if (!app.isPackaged) return;
 
@@ -1133,6 +1228,12 @@ ipcMain.handle('edify:openEdifyStudioWindow', async (_event, project: any) => {
   return { ok: true };
 });
 
+ipcMain.handle('edify:openAudioEditorWindow', async () => {
+  await ensureAppDirs();
+  await openAudioEditorWindow();
+  return { ok: true };
+});
+
 ipcMain.handle('edify:getEdifyStudioSeedProject', async () => {
   await ensureAppDirs();
   return edifyStudioSeedProject;
@@ -1142,6 +1243,14 @@ ipcMain.handle('edify:getStudioBootstrap', async () => {
   await ensureAppDirs();
   return {
     recentProjects: storeData.studioRecentProjects,
+    accountUser: await getStoredDesktopAccount()
+  };
+});
+
+ipcMain.handle('edify:getAudioEditorBootstrap', async () => {
+  await ensureAppDirs();
+  return {
+    recentProjects: storeData.audioRecentProjects,
     accountUser: await getStoredDesktopAccount()
   };
 });
@@ -1177,6 +1286,16 @@ ipcMain.handle('edify:saveStudioProjectAs', async (_event, document: any) => {
   return saveStudioProjectDocument(document, undefined, true);
 });
 
+ipcMain.handle('edify:saveAudioEditorProject', async (_event, payload: { document: any; filePath?: string }) => {
+  await ensureAppDirs();
+  return saveAudioProjectDocument(payload.document, payload.filePath, false);
+});
+
+ipcMain.handle('edify:saveAudioEditorProjectAs', async (_event, document: any) => {
+  await ensureAppDirs();
+  return saveAudioProjectDocument(document, undefined, true);
+});
+
 ipcMain.handle('edify:openStudioProjectDialog', async () => {
   await ensureAppDirs();
   const result = await dialog.showOpenDialog(edifyStudioWindow ?? mainWindow!, {
@@ -1198,6 +1317,27 @@ ipcMain.handle('edify:openStudioProjectDialog', async () => {
   return { canceled: false, filePath, document };
 });
 
+ipcMain.handle('edify:openAudioEditorProjectDialog', async () => {
+  await ensureAppDirs();
+  const result = await dialog.showOpenDialog(audioEditorWindow ?? mainWindow!, {
+    title: 'Open Audio Editor Project',
+    properties: ['openFile'],
+    filters: [
+      { name: 'Audio Editor Project', extensions: ['edifyaudio'] },
+      { name: 'JSON', extensions: ['json'] }
+    ]
+  });
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return { canceled: true };
+  }
+
+  const filePath = result.filePaths[0];
+  const document = await readJsonFile(filePath);
+  await addRecentAudioProject(projectSummaryFromDocument(filePath, document));
+  return { canceled: false, filePath, document };
+});
+
 ipcMain.handle('edify:saveStudioBinary', async (_event, payload: { suggestedName: string; extension: string; mimeType: string; buffer: ArrayBuffer }) => {
   await ensureAppDirs();
   const safeName = (payload.suggestedName || 'Thumbnail Studio Export')
@@ -1208,6 +1348,31 @@ ipcMain.handle('edify:saveStudioBinary', async (_event, payload: { suggestedName
   const filePath = dialog.showSaveDialogSync(edifyStudioWindow ?? mainWindow!, {
     title: 'Export from Thumbnail Studio',
     defaultPath: path.join(defaultDir, `${safeName}.${payload.extension}`),
+    filters: [
+      { name: payload.extension.toUpperCase(), extensions: [payload.extension] },
+      { name: 'All Files', extensions: ['*'] }
+    ]
+  });
+
+  if (!filePath) {
+    return { canceled: true };
+  }
+
+  const finalPath = filePath.toLowerCase().endsWith(`.${payload.extension}`) ? filePath : `${filePath}.${payload.extension}`;
+  await fs.mkdir(path.dirname(finalPath), { recursive: true });
+  await fs.writeFile(finalPath, Buffer.from(payload.buffer));
+  return { canceled: false, filePath: finalPath };
+});
+
+ipcMain.handle('edify:saveAudioEditorBinary', async (_event, payload: { suggestedName: string; extension: string; mimeType: string; buffer: ArrayBuffer }) => {
+  await ensureAppDirs();
+  const safeName = (payload.suggestedName || 'Audio Export')
+    .replace(/[<>:"/\\|?*]+/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim() || 'Audio Export';
+  const filePath = dialog.showSaveDialogSync(audioEditorWindow ?? mainWindow!, {
+    title: 'Export from Audio Editor',
+    defaultPath: path.join(app.getPath('music'), `${safeName}.${payload.extension}`),
     filters: [
       { name: payload.extension.toUpperCase(), extensions: [payload.extension] },
       { name: 'All Files', extensions: ['*'] }

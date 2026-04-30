@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { AudioEditorWindow } from './components/audio/AudioEditorWindow';
 import { EditorShell } from './components/EditorShell';
 import { HomeScreen } from './components/home/HomeScreen';
 import { CommandPalette, type CommandAction } from './components/modals/CommandPalette';
@@ -8,7 +9,6 @@ import { ExportModal } from './components/modals/ExportModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { ShortcutModal } from './components/modals/ShortcutModal';
 import { ThumbnailStudioModal } from './components/modals/ThumbnailStudioModal';
-import { VersionIntroModal } from './components/modals/VersionIntroModal';
 import { EdifyStudioWindow } from './components/studio/EdifyStudioWindow';
 import { ToastStack } from './components/ToastStack';
 import { edifyApi } from './lib/bridge';
@@ -166,6 +166,9 @@ export default function App() {
     if (windowMode === 'studio-editor') {
       return <EdifyStudioWindow />;
     }
+    if (windowMode === 'audio-editor') {
+      return <AudioEditorWindow />;
+    }
   }
 
   const [screen, setScreen] = useState<Screen>('home');
@@ -186,7 +189,6 @@ export default function App() {
   const [showClosePrompt, setShowClosePrompt] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [forcedUpdate, setForcedUpdate] = useState<ForcedUpdateState | null>(null);
-  const [showVersionIntro, setShowVersionIntro] = useState(false);
 
   const editor = useEditorState(useMemo(() => createDemoProject('Edify Demo Reel'), []));
 
@@ -204,11 +206,6 @@ export default function App() {
     setRecentProjects(info.recentProjects);
     setShowRecovery(info.recoveryAvailable);
     setShowConsent(!info.consentAccepted);
-    if (typeof window !== 'undefined') {
-      const introKey = `edify-version-intro-seen:${info.appVersion}:rev2`;
-      const alreadySeen = window.localStorage.getItem(introKey) === '1';
-      setShowVersionIntro(!alreadySeen);
-    }
   }, []);
 
   useEffect(() => {
@@ -380,6 +377,15 @@ export default function App() {
     });
   }, [editor.project, pushToast]);
 
+  const openAudioEditor = useCallback(async () => {
+    await edifyApi.openAudioEditorWindow();
+    pushToast({
+      title: 'Audio Editor opened',
+      detail: 'The new audio workspace is now open in its own dedicated window.',
+      tone: 'success'
+    });
+  }, [pushToast]);
+
   const commandActions = useMemo<CommandAction[]>(() => [
     { id: 'new', label: 'New Project', detail: 'Create a fresh Edify project', shortcut: 'Ctrl+N', run: () => createNewProject('Untitled Edit') },
     { id: 'import', label: 'Import Media', detail: 'Add videos, images, or audio from Windows', shortcut: 'Ctrl+I', run: importMedia },
@@ -391,10 +397,11 @@ export default function App() {
     { id: 'marketplace', label: 'Marketplace', detail: 'Browse free and premium creative packs', run: () => openPanel('marketplace') },
     { id: 'thumbnail', label: 'Thumbnail Studio', detail: 'Design YouTube, Shorts, and promo cover PNGs from your project.', run: openThumbnailStudio },
     { id: 'studio', label: 'Thumbnail Studio Pro', detail: 'Open the full thumbnail editor workspace in a dedicated window.', run: () => void openEdifyStudio() },
+    { id: 'audio-editor', label: 'Audio Editor', detail: 'Open the full audio workspace for voice cleanup, mixing, recording, and export.', run: () => void openAudioEditor() },
     { id: 'premium', label: 'Premium Studio', detail: 'Plans, code field, premium packs, and ultra exports', run: openPremiumStudio },
     { id: 'shortcuts', label: 'Shortcuts', detail: 'Show the keyboard cheat sheet', shortcut: '?', run: () => setShowShortcuts(true) },
     { id: 'settings', label: 'Settings', detail: 'Open performance and app preferences', run: () => setShowSettings(true) }
-  ], [createNewProject, importMedia, openEdifyStudio, openPanel, openPremiumStudio, openThumbnailStudio, saveProject]);
+  ], [createNewProject, importMedia, openAudioEditor, openEdifyStudio, openPanel, openPremiumStudio, openThumbnailStudio, saveProject]);
 
   const renameRecentProject = useCallback(async (project: ProjectSummary) => {
     const nextName = window.prompt('Rename project', project.name)?.trim();
@@ -522,6 +529,7 @@ export default function App() {
           onImportMedia={importMedia}
           onOpenPremium={openPremiumStudio}
           onOpenThumbnailStudio={openThumbnailStudio}
+          onOpenAudioEditor={() => { void openAudioEditor(); }}
           onOpenEdifyStudio={() => { void openEdifyStudio(); }}
           onOpenAccount={() => setShowAccount(true)}
           onOpenPanel={openPanel}
@@ -638,19 +646,7 @@ export default function App() {
         />
       )}
 
-      {showVersionIntro && bootstrap && (
-        <VersionIntroModal
-          version={bootstrap.appVersion}
-          onContinue={() => {
-            if (typeof window !== 'undefined') {
-              window.localStorage.setItem(`edify-version-intro-seen:${bootstrap.appVersion}:rev2`, '1');
-            }
-            setShowVersionIntro(false);
-          }}
-        />
-      )}
-
-      {showRecovery && !showVersionIntro && (
+      {showRecovery && (
         <div className="modal-scrim">
           <div className="dialog recovery-dialog">
             <div className="dialog-icon">
@@ -667,7 +663,7 @@ export default function App() {
         </div>
       )}
 
-      {showConsent && !showVersionIntro && (
+      {showConsent && (
         <div className="modal-scrim">
           <div className="dialog consent-dialog">
             <div className="dialog-icon consent-icon">

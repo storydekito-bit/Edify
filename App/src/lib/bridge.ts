@@ -1,4 +1,5 @@
 import type { BootstrapInfo, DesktopAccountProvider, DesktopAccountUser, MediaAsset, ProjectDocument } from '../types/edify';
+import type { AudioEditorBootstrap, AudioEditorProject } from '../types/audioEditor';
 import type { StudioBootstrap, StudioProject } from '../types/studio';
 
 function escapeHtml(value: unknown) {
@@ -191,7 +192,13 @@ type EdifyApi = {
   openThumbnailAdvancedWindow: (project: ProjectDocument) => Promise<any>;
   getThumbnailAdvancedProject: () => Promise<ProjectDocument | null>;
   openEdifyStudioWindow: (project?: ProjectDocument | null) => Promise<any>;
+  openAudioEditorWindow: () => Promise<any>;
   getEdifyStudioSeedProject: () => Promise<StudioProject | null>;
+  getAudioEditorBootstrap: () => Promise<AudioEditorBootstrap>;
+  saveAudioEditorProject: (document: AudioEditorProject, filePath?: string) => Promise<any>;
+  saveAudioEditorProjectAs: (document: AudioEditorProject) => Promise<any>;
+  openAudioEditorProjectDialog: () => Promise<any>;
+  saveAudioEditorBinary: (payload: { suggestedName: string; extension: string; mimeType: string; buffer: ArrayBuffer }) => Promise<any>;
   getStudioBootstrap: () => Promise<StudioBootstrap>;
   saveStudioProject: (document: StudioProject, filePath?: string) => Promise<any>;
   saveStudioProjectAs: (document: StudioProject) => Promise<any>;
@@ -318,8 +325,57 @@ const browserFallback: EdifyApi = {
   async openEdifyStudioWindow() {
     return { ok: false };
   },
+  async openAudioEditorWindow() {
+    return { ok: false };
+  },
   async getEdifyStudioSeedProject() {
     return null;
+  },
+  async getAudioEditorBootstrap() {
+    return {
+      recentProjects: JSON.parse(localStorage.getItem('edify-audio-editor-recent') ?? '[]'),
+      accountUser: null
+    };
+  },
+  async saveAudioEditorProject(document: AudioEditorProject) {
+    localStorage.setItem('edify-audio-editor-project', JSON.stringify(document));
+    const recent = [{
+      id: document.id,
+      name: document.name,
+      path: 'browser://edify-audio-editor-project',
+      updatedAt: new Date().toISOString()
+    }];
+    localStorage.setItem('edify-audio-editor-recent', JSON.stringify(recent));
+    return {
+      canceled: false,
+      filePath: 'browser://edify-audio-editor-project',
+      document: {
+        ...document,
+        path: 'browser://edify-audio-editor-project',
+        updatedAt: new Date().toISOString()
+      }
+    };
+  },
+  async saveAudioEditorProjectAs(document: AudioEditorProject) {
+    return this.saveAudioEditorProject(document);
+  },
+  async openAudioEditorProjectDialog() {
+    const raw = localStorage.getItem('edify-audio-editor-project');
+    return raw
+      ? { canceled: false, filePath: 'browser://edify-audio-editor-project', document: JSON.parse(raw) }
+      : { canceled: true };
+  },
+  async saveAudioEditorBinary(payload: { suggestedName: string; extension: string; mimeType: string; buffer: ArrayBuffer }) {
+    const blob = new Blob([payload.buffer], { type: payload.mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${payload.suggestedName}.${payload.extension}`;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return { canceled: false, filePath: link.download };
   },
   async getStudioBootstrap() {
     return {
