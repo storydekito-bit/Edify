@@ -205,7 +205,7 @@ export default function App() {
     setShowRecovery(info.recoveryAvailable);
     setShowConsent(!info.consentAccepted);
     if (typeof window !== 'undefined') {
-      const introKey = `edify-version-intro-seen:${info.appVersion}`;
+      const introKey = `edify-version-intro-seen:${info.appVersion}:rev2`;
       const alreadySeen = window.localStorage.getItem(introKey) === '1';
       setShowVersionIntro(!alreadySeen);
     }
@@ -643,7 +643,7 @@ export default function App() {
           version={bootstrap.appVersion}
           onContinue={() => {
             if (typeof window !== 'undefined') {
-              window.localStorage.setItem(`edify-version-intro-seen:${bootstrap.appVersion}`, '1');
+              window.localStorage.setItem(`edify-version-intro-seen:${bootstrap.appVersion}:rev2`, '1');
             }
             setShowVersionIntro(false);
           }}

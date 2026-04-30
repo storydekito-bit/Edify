@@ -15,7 +15,7 @@ type IntroSlide = {
   bullets: string[];
 };
 
-const slideDurationMs = 2500;
+const slideDurationMs = 5200;
 
 export function VersionIntroModal({ version, onContinue }: VersionIntroModalProps) {
   const slides = useMemo<IntroSlide[]>(() => [
@@ -55,6 +55,8 @@ export function VersionIntroModal({ version, onContinue }: VersionIntroModalProp
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [completed, setCompleted] = useState(false);
+
+  const isLastSlide = activeIndex === slides.length - 1;
 
   useEffect(() => {
     if (completed) return undefined;
@@ -149,9 +151,37 @@ export function VersionIntroModal({ version, onContinue }: VersionIntroModalProp
         <footer className="version-intro-footer">
           <div className="version-intro-footer-copy">
             <strong>{completed ? 'Presentation complete' : `Step ${activeIndex + 1} of ${slides.length}`}</strong>
-            <small>{completed ? 'Continue into Edify and keep the normal first-run flow afterward.' : 'The intro will continue automatically through this release presentation.'}</small>
+            <small>
+              {completed
+                ? 'Continue into Edify and keep the normal first-run flow afterward.'
+                : 'You can move through the presentation manually, or let the release intro continue automatically.'}
+            </small>
           </div>
           <div className="version-intro-footer-actions">
+            {activeIndex > 0 && !completed && (
+              <button
+                className="ghost-button"
+                type="button"
+                onClick={() => {
+                  setActiveIndex((current) => Math.max(0, current - 1));
+                  setCompleted(false);
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {!completed && !isLastSlide && (
+              <button
+                className="ghost-button"
+                type="button"
+                onClick={() => {
+                  setActiveIndex(slides.length - 1);
+                  setCompleted(true);
+                }}
+              >
+                Skip intro
+              </button>
+            )}
             {!completed && (
               <button
                 className="ghost-button"
@@ -161,11 +191,35 @@ export function VersionIntroModal({ version, onContinue }: VersionIntroModalProp
                   setCompleted(true);
                 }}
               >
-                Skip to final step
+                Show final step
               </button>
             )}
-            <button className="primary-button" type="button" onClick={onContinue} disabled={!completed}>
-              Continue
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => {
+                if (completed) {
+                  onContinue();
+                  return;
+                }
+                if (isLastSlide) {
+                  setCompleted(true);
+                  return;
+                }
+                setActiveIndex((current) => Math.min(current + 1, slides.length - 1));
+              }}
+            >
+              {completed ? 'Continue' : isLastSlide ? 'Finish intro' : 'Next step'}
+            </button>
+            <button
+              className="ghost-button"
+              type="button"
+              onClick={() => {
+                setCompleted(true);
+                onContinue();
+              }}
+            >
+              Enter Edify now
             </button>
           </div>
         </footer>
