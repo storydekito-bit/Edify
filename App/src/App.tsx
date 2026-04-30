@@ -8,6 +8,7 @@ import { ExportModal } from './components/modals/ExportModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { ShortcutModal } from './components/modals/ShortcutModal';
 import { ThumbnailStudioModal } from './components/modals/ThumbnailStudioModal';
+import { VersionIntroModal } from './components/modals/VersionIntroModal';
 import { EdifyStudioWindow } from './components/studio/EdifyStudioWindow';
 import { ToastStack } from './components/ToastStack';
 import { edifyApi } from './lib/bridge';
@@ -185,6 +186,7 @@ export default function App() {
   const [showClosePrompt, setShowClosePrompt] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [forcedUpdate, setForcedUpdate] = useState<ForcedUpdateState | null>(null);
+  const [showVersionIntro, setShowVersionIntro] = useState(false);
 
   const editor = useEditorState(useMemo(() => createDemoProject('Edify Demo Reel'), []));
 
@@ -202,6 +204,11 @@ export default function App() {
     setRecentProjects(info.recentProjects);
     setShowRecovery(info.recoveryAvailable);
     setShowConsent(!info.consentAccepted);
+    if (typeof window !== 'undefined') {
+      const introKey = `edify-version-intro-seen:${info.appVersion}`;
+      const alreadySeen = window.localStorage.getItem(introKey) === '1';
+      setShowVersionIntro(!alreadySeen);
+    }
   }, []);
 
   useEffect(() => {
@@ -631,7 +638,19 @@ export default function App() {
         />
       )}
 
-      {showRecovery && (
+      {showVersionIntro && bootstrap && (
+        <VersionIntroModal
+          version={bootstrap.appVersion}
+          onContinue={() => {
+            if (typeof window !== 'undefined') {
+              window.localStorage.setItem(`edify-version-intro-seen:${bootstrap.appVersion}`, '1');
+            }
+            setShowVersionIntro(false);
+          }}
+        />
+      )}
+
+      {showRecovery && !showVersionIntro && (
         <div className="modal-scrim">
           <div className="dialog recovery-dialog">
             <div className="dialog-icon">
@@ -648,7 +667,7 @@ export default function App() {
         </div>
       )}
 
-      {showConsent && (
+      {showConsent && !showVersionIntro && (
         <div className="modal-scrim">
           <div className="dialog consent-dialog">
             <div className="dialog-icon consent-icon">

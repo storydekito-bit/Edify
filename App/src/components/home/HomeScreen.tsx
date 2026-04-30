@@ -1,5 +1,5 @@
 import { BadgeHelp, Bot, BrainCircuit, Cpu, Crown, FolderOpen, ImagePlus, Import, LayoutTemplate, LifeBuoy, Mic2, Minus, Music2, Plus, Rocket, ShieldCheck, ShoppingBag, Sparkles, UserRound, Video, Wand2, X } from 'lucide-react';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { edifyApi } from '../../lib/bridge';
 import { hasAnyPremium, loadPremiumAccess } from '../../lib/premium';
 import type { BootstrapInfo, PanelId, ProjectSummary } from '../../types/edify';
@@ -40,7 +40,7 @@ const launchHighlights = [
   { title: 'Real render path', detail: 'FFmpeg export, audio mix, captions burn and watermark rules.', icon: Cpu, panel: 'render' as PanelId }
 ];
 
-export function HomeScreen({
+export const HomeScreen = memo(function HomeScreen({
   recentProjects,
   bootstrap,
   accountUser,
@@ -346,4 +346,4 @@ export function HomeScreen({
       )}
     </main>
   );
-}
+});
