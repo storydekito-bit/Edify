@@ -1938,6 +1938,7 @@ textarea:focus {
 }
 
 .version-intro-scrim {
+  -webkit-app-region: no-drag;
   position: fixed;
   inset: 0;
   z-index: 1550;
@@ -1951,6 +1952,7 @@ textarea:focus {
 }
 
 .version-intro-modal {
+  -webkit-app-region: no-drag;
   position: relative;
   width: min(1160px, calc(100vw - 38px));
   min-height: min(760px, calc(100vh - 38px));
@@ -2003,6 +2005,7 @@ textarea:focus {
 .version-intro-header,
 .version-intro-body,
 .version-intro-footer {
+  -webkit-app-region: no-drag;
   position: relative;
   z-index: 1;
 }
@@ -2050,6 +2053,7 @@ textarea:focus {
 }
 
 .version-intro-progress-dot {
+  -webkit-app-region: no-drag;
   width: 54px;
   height: 8px;
   padding: 0;
@@ -2214,6 +2218,7 @@ textarea:focus {
 }
 
 .version-intro-footer-actions {
+  -webkit-app-region: no-drag;
   display: flex;
   align-items: center;
   gap: 10px;
