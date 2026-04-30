@@ -1,0 +1,23 @@
+<svg width="960" height="540" viewBox="0 0 960 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="960" height="540" fill="#080A10"/>
+  <rect x="54" y="48" width="852" height="444" rx="28" fill="url(#bg)" stroke="#263454"/>
+  <ellipse cx="482" cy="342" rx="236" ry="52" fill="#05060A"/>
+  <circle cx="480" cy="250" r="128" fill="url(#orb)" stroke="#42E8FF" stroke-opacity=".35" stroke-width="2"/>
+  <path d="M369 244C434 205 512 203 591 247" stroke="#FFFFFF" stroke-opacity=".55" stroke-width="4" stroke-linecap="round"/>
+  <path d="M273 309C407 228 552 226 690 309" stroke="#9F7CFF" stroke-opacity=".75" stroke-width="3" stroke-linecap="round"/>
+  <path d="M318 377C420 326 536 324 642 377" stroke="#2E83FF" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="480" cy="250" r="42" fill="#F2F7FF" opacity=".92"/>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="64" x2="832" y2="474" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#17213A"/>
+      <stop offset=".54" stop-color="#0B0F19"/>
+      <stop offset="1" stop-color="#1B1640"/>
+    </linearGradient>
+    <radialGradient id="orb" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(426 186) rotate(50) scale(214)">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset=".38" stop-color="#42E8FF"/>
+      <stop offset=".72" stop-color="#2E83FF"/>
+      <stop offset="1" stop-color="#111827"/>
+    </radialGradient>
+  </defs>
+</svg>

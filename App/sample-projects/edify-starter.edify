@@ -1,0 +1,109 @@
+{
+  "id": "sample-edify-starter",
+  "name": "Edify Starter Reel",
+  "createdAt": "2026-04-21T00:00:00.000Z",
+  "updatedAt": "2026-04-21T00:00:00.000Z",
+  "settings": {
+    "resolution": {
+      "width": 1920,
+      "height": 1080
+    },
+    "fps": 30,
+    "aspectRatio": "16:9",
+    "backgroundColor": "#05060a",
+    "sampleRate": 48000
+  },
+  "assets": [
+    {
+      "id": "asset-neon-city",
+      "name": "Neon city push in.mp4",
+      "kind": "video",
+      "path": "demo://neon-city",
+      "thumbnailUrl": "./demo-assets/neon-city.svg",
+      "duration": 12,
+      "importedAt": "2026-04-21T00:00:00.000Z",
+      "extension": "MP4",
+      "size": 128000000,
+      "dimensions": {
+        "width": 3840,
+        "height": 2160
+      }
+    },
+    {
+      "id": "asset-beat",
+      "name": "Midnight pulse.wav",
+      "kind": "audio",
+      "path": "demo://midnight-pulse",
+      "thumbnailUrl": "./demo-assets/waveform.svg",
+      "duration": 34,
+      "importedAt": "2026-04-21T00:00:00.000Z",
+      "extension": "WAV",
+      "size": 44000000
+    }
+  ],
+  "tracks": [
+    {
+      "id": "track-video",
+      "name": "Video 1",
+      "kind": "video",
+      "height": 68,
+      "color": "#2e83ff",
+      "clips": [
+        {
+          "id": "clip-video",
+          "assetId": "asset-neon-city",
+          "trackId": "track-video",
+          "kind": "video",
+          "name": "Neon city push in",
+          "start": 0,
+          "duration": 8,
+          "inPoint": 0,
+          "color": "#2e83ff",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "opacity": 1
+          },
+          "audio": {
+            "volume": 0.82,
+            "fadeIn": 0,
+            "fadeOut": 0,
+            "pitch": 0,
+            "denoise": 0
+          },
+          "effects": [
+            {
+              "id": "fx-cool",
+              "name": "Cinematic Cool Tone",
+              "kind": "filter",
+              "enabled": true,
+              "intensity": 64
+            }
+          ],
+          "keyframes": []
+        }
+      ]
+    },
+    {
+      "id": "track-audio",
+      "name": "Music",
+      "kind": "audio",
+      "height": 58,
+      "color": "#21d19f",
+      "clips": []
+    }
+  ],
+  "markers": [
+    {
+      "id": "marker-title",
+      "time": 1.2,
+      "label": "Title hit",
+      "color": "#42e8ff"
+    }
+  ],
+  "notes": "Example starter project manifest.",
+  "duration": 12,
+  "version": 1
+}

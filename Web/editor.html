@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=./editor-live.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Opening Edify Web Editor...</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, "Segoe UI", sans-serif;
+        background: #05060a;
+        color: #eef4ff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top left, rgba(46, 131, 255, 0.24), transparent 28%),
+          radial-gradient(circle at top right, rgba(159, 124, 255, 0.18), transparent 26%),
+          #05060a;
+      }
+
+      .redirect-card {
+        width: min(460px, calc(100vw - 32px));
+        padding: 24px;
+        border: 1px solid rgba(154, 177, 255, 0.16);
+        border-radius: 18px;
+        background: rgba(12, 15, 23, 0.9);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .mark {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #2e83ff, #9f7cff);
+        font-weight: 800;
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.7;
+        color: #c9d5ee;
+      }
+
+      a {
+        color: #42e8ff;
+      }
+    </style>
+    <script>
+      window.location.replace('./editor-live.html');
+    </script>
+  </head>
+  <body>
+    <main class="redirect-card">
+      <div class="brand">
+        <span class="mark">E</span>
+        <strong>Edify</strong>
+      </div>
+      <p>
+        Opening the live web editor...
+        <a href="./editor-live.html">Continue manually</a>
+      </p>
+    </main>
+  </body>
+</html>
