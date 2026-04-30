@@ -1,5 +1,5 @@
 import { AudioLines, BadgeHelp, Bot, BrainCircuit, Cpu, Crown, FolderOpen, ImagePlus, Import, LayoutTemplate, LifeBuoy, Mic2, Minus, Music2, Plus, Rocket, ShieldCheck, ShoppingBag, Sparkles, UserRound, Video, Wand2, X } from 'lucide-react';
-import { memo, useRef, useState } from 'react';
+import { memo, useState } from 'react';
 import { edifyApi } from '../../lib/bridge';
 import { hasAnyPremium, loadPremiumAccess } from '../../lib/premium';
 import type { BootstrapInfo, PanelId, ProjectSummary } from '../../types/edify';
@@ -60,7 +60,6 @@ export const HomeScreen = memo(function HomeScreen({
   onDropFiles
 }: HomeScreenProps) {
   const [recentMenu, setRecentMenu] = useState<{ x: number; y: number; project: ProjectSummary } | null>(null);
-  const scrollRef = useRef<HTMLElement | null>(null);
   const premiumAccess = loadPremiumAccess();
   const hasPremium = hasAnyPremium(premiumAccess);
   const localProjects = recentProjects.filter((project) => project.source !== 'cloud');
@@ -68,19 +67,8 @@ export const HomeScreen = memo(function HomeScreen({
 
   return (
     <main
-      ref={scrollRef}
       className="home-screen"
       onClick={() => setRecentMenu(null)}
-      onWheelCapture={(event) => {
-        const current = scrollRef.current;
-        if (!current) return;
-        if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-        const nextTop = current.scrollTop + event.deltaY;
-        const canScroll = nextTop >= 0 && nextTop <= current.scrollHeight - current.clientHeight;
-        if (!canScroll) return;
-        event.preventDefault();
-        current.scrollTop = nextTop;
-      }}
       onDragOver={(event) => event.preventDefault()}
       onDrop={(event) => {
         event.preventDefault();
